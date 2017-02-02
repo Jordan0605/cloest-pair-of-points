@@ -4,12 +4,15 @@
 #include <fstream>
 #include <math.h>
 #include <float.h>
+#include <sstream>
+#include <string>
+#include <string.h>
 
 using namespace std;
 
 struct dot{
-  int x;
-  int y;
+  float x;
+  float y;
 }input[100000];
 
 struct {
@@ -45,27 +48,6 @@ bool exist(struct dot a, struct dot b){
   return false;
 }
 
-void quick_sort_recursive(struct dot arr[], int start, int end) {
-	if (start >= end) return;
-	int mid = arr[end].x;
-	int left = start, right = end - 1;
-	while (left < right) {
-		while (arr[left].x < mid && left < right) left++;
-		while (arr[right].x >= mid && left < right) right--;
-		swapidx(&arr[left], &arr[right]);
-	}
-	if (arr[left].x >= arr[end].x)
-		swapidx(&arr[left], &arr[end]);
-	else
-		left++;
-	quick_sort_recursive(arr, start, left - 1);
-	quick_sort_recursive(arr, left + 1, end);
-}
-
-void quick_sort(struct dot arr[], int len) {
-	quick_sort_recursive(arr, 0, len - 1);
-}
-
 float bruteForce(struct dot P[], int n){
   float min = FLT_MAX;
   for(int i=0 ; i<n-1 ; i++){
@@ -92,18 +74,20 @@ float bruteForce(struct dot P[], int n){
   return min;
 }
 
-int compare(const void *a, const void *b){
+int compareX(const void *a, const void *b){
+  struct dot *x = (struct dot*)a;
+  struct dot *y = (struct dot*)b;
+  return (x->x - y->x);
+}
+
+int compareY(const void *a, const void *b){
   struct dot *x = (struct dot*)a;
   struct dot *y = (struct dot*)b;
   return (x->y - y->y);
 }
 
 float InRange(struct dot P[], int size, float min){
-  qsort(P, size, sizeof(struct dot), compare);
-  /*cout << "start min = " << min << endl;
-  for(int i=0 ; i<size ; i++){
-    cout << P[i].x << " " << P[i].y << endl;
-  }*/
+  qsort(P, size, sizeof(struct dot), compareY);
   for(int i=0 ; i<size-1 ; i++){
     for(int j=i+1 ; j<size && (P[j].y - P[i].y) <= min ; j++){
       if(dist(P[i], P[j]) < min){
@@ -141,7 +125,7 @@ float closestP(struct dot P[], int n){
   struct dot point[n];
   int k = 0;
   for(int i=0 ; i<n ; i++){
-    if(abs(P[i].x - midP.x) < d){
+    if(fabs(P[i].x - midP.x) < d){
       point[k] = P[i];
       k++;
     }
@@ -154,6 +138,7 @@ int main(int argc, char const *argv[]) {
   fstream out;
   char buf[1024];
   int idx = 0;
+  string token;
 
   file.open(argv[1], ios::in);
   if(!file){
@@ -162,28 +147,24 @@ int main(int argc, char const *argv[]) {
   }
   while(!file.eof()){
     file.getline(buf, sizeof(buf));
-    input[idx].x = (int)buf[0] - 48;
-    input[idx].y = (int)buf[2] - 48;
+    stringstream ss(buf);
+    ss >> token;
+    input[idx].x = stof(token);
+    ss >> token;
+    input[idx].y = stof(token);
     idx++;
   }
   idx--;
   file.close();
 
-  quick_sort(input, idx);
+  qsort(input, idx, sizeof(struct dot), compareX);
 
-  /*for(int i=0 ; i<idx ; i++){
-    cout << input[i].x << "," << input[i].y << endl;
-  }*/
-
-  //cout << closestP(input, idx) << endl;
-  out.open("output_devideandconquer.txt", ios::out);
+  out.open("output_divideandconquer.txt", ios::out);
   out << closestP(input, idx) << endl;
   for(int i=0 ; i<resultidx ; i++){
     out << result[i].from.x << " " << result[i].from.y << " " << result[i].to.x << " " << result[i].to.y << endl;
   }
   out.close();
-
-  //cout << minium << endl;
 
   return 0;
 }

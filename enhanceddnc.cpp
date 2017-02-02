@@ -4,12 +4,15 @@
 #include <fstream>
 #include <math.h>
 #include <float.h>
+#include <sstream>
+#include <string>
+#include <string.h>
 
 using namespace std;
 
 struct dot{
-  int x;
-  int y;
+  float x;
+  float y;
 }input[100000];
 
 struct {
@@ -19,6 +22,7 @@ struct {
 
 int resultidx = 0;
 float minium = FLT_MAX;
+bool floatCase = false;
 
 float dist(struct dot a, struct dot b){
   return sqrt(pow((a.x - b.x), 2) + pow((a.y - b.y), 2));
@@ -31,6 +35,18 @@ int compare(const void *a, const void *b){
     return (x->x - y->x);
   else
     return (x->y - y->y);
+}
+
+int compareX(const void *a, const void *b){
+  struct dot *x = (struct dot*)a;
+  struct dot *y = (struct dot*)b;
+  return (x->x - y->x);
+}
+
+int compareY(const void *a, const void *b){
+  struct dot *x = (struct dot*)a;
+  struct dot *y = (struct dot*)b;
+  return (x->y - y->y);
 }
 
 bool exist(struct dot a, struct dot b){
@@ -70,6 +86,8 @@ float bruteForce(struct dot P[], int n){
 }
 
 float InRange(struct dot P[], int size, float min){
+  if(floatCase)
+    qsort(P, size, sizeof(struct dot), compareY);
   for(int i=0 ; i<size-1 ; i++){
     for(int j=i+1 ; j<size && (P[j].y - P[i].y) <= min ; j++){
       if(dist(P[i], P[j]) < min){
@@ -96,9 +114,6 @@ float InRange(struct dot P[], int size, float min){
 
 float dnc(struct dot P[], int n){
   qsort(P, n, sizeof(struct dot), compare);
-  /*for(int i=0 ; i<size ; i++){
-    cout << P[i].x << " " << P[i].y << endl;
-  }*/
   if(n <= 3)
     return bruteForce(P, n);
   int mid = n/2;
@@ -110,7 +125,7 @@ float dnc(struct dot P[], int n){
   struct dot point[n];
   int k = 0;
   for(int i=0 ; i<n ; i++){
-    if(abs(P[i].x - midP.x) < d){
+    if(fabs(P[i].x - midP.x) < d){
       point[k] = P[i];
       k++;
     }
@@ -123,6 +138,10 @@ int main(int argc, char const *argv[]) {
   fstream out;
   char buf[1024];
   int idx = 0;
+  string token;
+  string arg(argv[1]);
+  if(arg.find("float"))
+    floatCase = true;
 
   file.open(argv[1], ios::in);
   if(!file){
@@ -131,14 +150,17 @@ int main(int argc, char const *argv[]) {
   }
   while(!file.eof()){
     file.getline(buf, sizeof(buf));
-    input[idx].x = (int)buf[0] - 48;
-    input[idx].y = (int)buf[2] - 48;
+    stringstream ss(buf);
+    ss >> token;
+    input[idx].x = stof(token);
+    ss >> token;
+    input[idx].y = stof(token);
     idx++;
   }
   idx--;
   file.close();
 
-  out.open("output_divideandconquer.txt", ios::out);
+  out.open("output_enhanceddnc.txt", ios::out);
   out << dnc(input, idx) << endl;
   for(int i=0 ; i<resultidx ; i++){
     out << result[i].from.x << " " << result[i].from.y << " " << result[i].to.x << " " << result[i].to.y << endl;

@@ -4,12 +4,15 @@
 #include <fstream>
 #include <math.h>
 #include <limits>
+#include <sstream>
+#include <string>
+#include <string.h>
 
 using namespace std;
 
 struct dot{
-  int x;
-  int y;
+  float x;
+  float y;
 }point[100000];
 
 struct mp{
@@ -42,29 +45,32 @@ int main(int argc, char const *argv[]) {
   int idx = 0;
   int resultidx = 0;
   double mindist = numeric_limits<double>::max();
+  string token;
 
   file.open(argv[1], ios::in);
   if(!file){
     cerr << "open file failed." << endl;
     return -1;
   }
+
   while(!file.eof()){
     file.getline(buf, sizeof(buf));
-    //cout << buf << endl;
-    point[idx].x = (int)buf[0] - 48;
-    point[idx].y = (int)buf[2] - 48;
+    stringstream ss(buf);
+    ss >> token;
+    point[idx].x = stof(token);
+    ss >> token;
+    point[idx].y = stof(token);
     idx++;
   }
+
   file.close();
   idx--;
-  /*for(int i=0 ; i<idx ; i++){
-    cout << point[i].x << " , " << point[i].y << endl;
-  }*/
-  for(int i=0 ; i<idx-1 ; i++){
+
+  for(int i=0 ; i<idx ; i++){
     for(int j=i+1 ; j<idx ; j++){
       //if(i == j) continue;
       if(dist(point[i], point[j]) < mindist){
-        memset(minpair, 0, sizeof(minpair));
+        //memset(minpair, 0, sizeof(minpair));
         resultidx = 0;
         mindist = dist(point[i], point[j]);
         minpair[resultidx].from = i;
@@ -78,6 +84,7 @@ int main(int argc, char const *argv[]) {
       }
     }
   }
+  cout << "ready to write into file." << endl;
 
   for(int i=0 ; i<resultidx ; i++){
     if(point[minpair[i].from].x > point[minpair[i].to].x || point[minpair[i].from].y > point[minpair[i].to].y){
@@ -96,7 +103,7 @@ int main(int argc, char const *argv[]) {
       }
     }
   }
-  
+
   out.open("output_bruteforce.txt", ios::out);
   out << mindist << "\n";
   for(int i=0 ; i<resultidx ; i++){
